@@ -1,0 +1,53 @@
+{
+  "module_version": "0.7-unverified",
+  "started_utc": "2026-10-09T16:41:43+00:00",
+  "home_url": "https://rrb.indianrailways.gov.in/",
+  "homepage": {
+    "requested_url": "https://rrb.indianrailways.gov.in/",
+    "final_url": null,
+    "http_status": null,
+    "content_type": null,
+    "access_status": "exception",
+    "retrieval_method": "http_get",
+    "size_bytes": 0,
+    "exception": "ConnectionError: HTTPSConnectionPool(host='rrb.indianrailways.gov.in', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='rrb.indianrailways.gov.in', port=443): Failed to resolve 'rrb.indianrailways.gov.in' ([Errno -3] Temporary failure in name resoluti",
+    "error_kind": "dns_failure",
+    "attempts": 2,
+    "elapsed_s": 0.001,
+    "response_headers": {}
+  },
+  "discovery": {},
+  "boards": [],
+  "summary": {
+    "reason": "homepage not usable: exception",
+    "candidates_matched": 0,
+    "candidates_excluded": 0,
+    "candidates_duplicate": 0,
+    "candidates_uncertain": 0,
+    "candidates_selected": 0,
+    "clusters_found": 0,
+    "boards_selected_for_fetch": 0,
+    "response_received": 0,
+    "identity_confirmed": 0,
+    "identity_unconfirmed": 0,
+    "pages_parsed_ok": 0,
+    "pages_with_notices": 0,
+    "access_failed": 0,
+    "boards_verified": 0,
+    "notices_total": 0
+  },
+  "overall_status": "TOTAL_FAILURE",
+  "production_ready": false,
+  "robots": {
+    "https://rrb.indianrailways.gov.in": {
+      "url": "https://rrb.indianrailways.gov.in/robots.txt",
+      "http_status": null,
+      "error_kind": "dns_failure",
+      "exception": "ConnectionError: HTTPSConnectionPool(host='rrb.indianrailways.gov.in', port=443): Max retries exceeded with url: /robots.txt (Caused by NameResolutionError(\"HTTPSConnection(host='rrb.indianrailways.gov.in', port=443): Failed to resolve 'rrb.indianrailways.gov.in' ([Errno -3] Temporary failure in nam",
+      "elapsed_s": 0.003,
+      "effect": "treated_as_allow_all"
+    }
+  },
+  "notices": [],
+  "finished_utc": "2026-10-09T16:41:50+00:00"
+}
