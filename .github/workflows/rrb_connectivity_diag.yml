@@ -1,0 +1,57 @@
+name: RRB Connectivity Diagnostic
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: DNS / TCP / TLS / HTTPS per host (verification ON, diagnostic only)
+        run: |
+          python3 - <<'PY' | tee connectivity_diagnostic.txt
+          import json, socket, ssl, time
+          HOSTS = ["rrb.indianrailways.gov.in", "www.google.com"]
+          T = 10  # same connect timeout the scanner uses
+          def err(e): return f"{type(e).__name__}: {' '.join(str(e).split())[:160]}"
+          def tcp(ip, fam):
+              t = time.monotonic()
+              try:
+                  s = socket.socket(fam, socket.SOCK_STREAM); s.settimeout(T); s.connect((ip, 443))
+                  return s, {"ok": True, "s": round(time.monotonic() - t, 2)}
+              except Exception as e:
+                  return None, {"ok": False, "s": round(time.monotonic() - t, 2), "error": err(e)}
+          out = []
+          for host in HOSTS:
+              r = {"host": host, "dns": None, "addresses": []}
+              t = time.monotonic()
+              try:
+                  infos = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+                  r["dns"] = {"ok": True, "s": round(time.monotonic() - t, 2)}
+                  seen = []
+                  for fam, _, _, _, sa in infos:
+                      if sa[0] not in seen: seen.append(sa[0]); r["addresses"].append({"ip": sa[0], "family": "IPv6" if fam == socket.AF_INET6 else "IPv4", "fam": fam})
+              except Exception as e:
+                  r["dns"] = {"ok": False, "s": round(time.monotonic() - t, 2), "error": err(e)}
+              for a in r["addresses"][:4]:
+                  fam = a.pop("fam"); s, a["tcp"] = tcp(a["ip"], fam)
+                  if s:
+                      t = time.monotonic()
+                      try:
+                          w = ssl.create_default_context().wrap_socket(s, server_hostname=host)
+                          w.settimeout(T); w.sendall(f"HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n".encode())
+                          a["tls_https"] = {"ok": True, "tls": w.version(), "status_line": w.recv(200).split(b"\r\n")[0].decode("latin1"), "s": round(time.monotonic() - t, 2)}
+                          w.close()
+                      except Exception as e:
+                          a["tls_https"] = {"ok": False, "error": err(e)}; s.close()
+              out.append(r)
+          print(json.dumps(out, indent=2))
+          PY
+      - name: Upload diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rrb_connectivity_diagnostic
+          path: connectivity_diagnostic.txt
+          if-no-files-found: warn
