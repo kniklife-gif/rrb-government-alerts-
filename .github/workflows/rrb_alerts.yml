@@ -1,31 +1,25 @@
-name: RRB Alerts
-on:
-  schedule:
-    - cron: "17 */2 * * *"
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
+name: rrb-diagnose
+on: workflow_dispatch
 jobs:
-  rrb:
+  diag:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install deps
-        run: pip install -r requirements.txt
-      - name: Run RRB monitor
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python main.py
-      - name: Persist state
+        with: { python-version: "3.12" }
+      - run: pip install requests beautifulsoup4 lxml
+      - id: diag
+        continue-on-error: true
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git add state/seen.json
-          git diff --quiet --cached || git commit -m "chore: update rrb state"
-          git push
+          rc=0; python3 rrb.py --diagnose > diag.json || rc=$?
+          cat diag.json; echo "diagnose_exit=$rc"; exit $rc
+      - if: steps.diag.outcome == 'success'
+        run: python3 rrb.py --live --pdf-meta --output rrb_live.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rrb-results
+          path: |
+            diag.json
+            rrb_live.json
+          if-no-files-found: ignore
